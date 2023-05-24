@@ -96,14 +96,18 @@ def main():
     # Connect to the server
     client.connect_to_server()
 
-    # Send a request to the server
-    # request = "Client request"
-    # client.send_request(request)
-    usr=client.login()
+    try:
+        # Send a request to the server
+        # request = "Client request"
+        # client.send_request(request)
+        usr=client.login()
+        
+        usr.run()
     
-    usr.run()
-    # Close the connection
-    client.close_connection()
+    except KeyboardInterrupt:
+        # Close the connection on Ctrl+C
+        client.close_connection()
+        print("Connection closed due to KeyboardInterrupt")
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,7 @@ import signal
 import sys
 import DBConnection
 import datetime
+
 class Server:
     def __init__(self, server_ip, port):
         self.server_ip = server_ip
@@ -35,33 +36,28 @@ class Server:
                     else:
                         response += "0 "
                     response += rows[0][0] + " " + rows[0][1] + " " + rows[0][2] + " " + rows[0][3] + " " + (rows[0][4].rstrip(b'\x00')).decode() + " " + rows[0][5].strftime("%Y-%m-%d")
-
-                    
-                    
-
-
             client_socket.sendall(response.encode())
-
         except Exception as e:
             print("Error occurred during client request:", str(e))
-
         finally:
             # Close the client socket
             client_socket.close()
 
     def start_server(self):
-        # Create a socket object
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # Bind the socket to a specific IP and port
-        self.server_socket.bind((self.server_ip, self.port))
+            # Set the SO_REUSEADDR option so that port 8080 is immediately reusable
+            self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # Listen for client connections
-        self.server_socket.listen(5)
-        print("Server listening on port", self.port)
+            # Bind the socket to a specific IP and port
+            self.server_socket.bind((self.server_ip, self.port))
 
-        while self.is_running:
-            try:
+            # Listen for client connections
+            self.server_socket.listen(5)
+            print("Server listening on port", self.port)
+
+            while self.is_running:
                 # Accept incoming connection
                 client_socket, client_address = self.server_socket.accept()
                 print("Accepted connection from:", client_address)
@@ -70,16 +66,19 @@ class Server:
                 client_thread = threading.Thread(target=self.handle_client, args=(client_socket, client_address))
                 client_thread.start()
 
-            except KeyboardInterrupt:
-                print("Server is shutting down...")
-                self.is_running = False
+        except KeyboardInterrupt:
+            print("Server is shutting down...")
+            self.is_running = False
 
-        # Close the server socket
-        self.server_socket.close()
+        finally:
+            # Close the server socket
+            if self.server_socket:
+                self.server_socket.close()
 
-    def handle_shutdown(self, signal, frame):
-        print("Received shutdown signal...")
-        self.is_running = False
+
+def handle_shutdown(signal, frame):
+    print("Received shutdown signal...")
+    sys.exit(0)
 
 
 def main():
@@ -90,7 +89,7 @@ def main():
     server = Server(SERVER_IP, PORT)
 
     # Register the shutdown signal handler
-    signal.signal(signal.SIGINT, server.handle_shutdown)
+    signal.signal(signal.SIGINT, handle_shutdown)
 
     # Start the server
     server.start_server()
