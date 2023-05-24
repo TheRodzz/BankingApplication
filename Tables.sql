@@ -4,7 +4,8 @@ CREATE TABLE customer(
     ltname VARCHAR(50),
     phone_no CHAR(10) PRIMARY KEY,
     encrypted_password BINARY(32),
-    dob DATE
+    dob DATE,
+    isAdmin BOOLEAN
 );
 
 CREATE TABLE branch
@@ -23,8 +24,8 @@ CREATE TABLE account(
     balance INT,
     isActive BOOLEAN,
     type CHAR(1),
-    FOREIGN KEY (phone_no) REFERENCES customer(phone_no),
-    FOREIGN KEY (bid) REFERENCES branch(bid)
+    FOREIGN KEY (phone_no) REFERENCES customer(phone_no) ON UPDATE CASCADE ON DELETE SET NULL,
+    FOREIGN KEY (bid) REFERENCES branch(bid) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE transaction(
@@ -33,7 +34,7 @@ CREATE TABLE transaction(
     type CHAR(1),
     amount INT,
     time TIMESTAMP,
-    FOREIGN KEY (acc_no) REFERENCES account(acc_no)
+    FOREIGN KEY (acc_no) REFERENCES account(acc_no) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE card(
@@ -41,8 +42,10 @@ CREATE TABLE card(
     acc_no CHAR(16),
     card_type CHAR(1), 
     expiry_date DATE,
+    pin CHAR(4),
     cvv CHAR(3),
-    FOREIGN KEY (acc_no) REFERENCES account(acc_no)
+    isActive BOOLEAN,
+    FOREIGN KEY (acc_no) REFERENCES account(acc_no) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE loan(
@@ -52,5 +55,5 @@ CREATE TABLE loan(
     interest_rate INT,
     start_date DATE,
     end_date DATE,
-    FOREIGN KEY (acc_no) REFERENCES account(acc_no)
+    FOREIGN KEY (acc_no) REFERENCES account(acc_no) ON UPDATE CASCADE ON DELETE SET NULL
 );

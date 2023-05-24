@@ -1,25 +1,25 @@
-INSERT INTO customer (fname, mname, ltname, phone_no, encrypted_password, dob)
+INSERT INTO customer (isAdmin, fname, mname, ltname, phone_no, encrypted_password, dob)
 VALUES
-    ('Aarav', 'Kumar', 'Patel', '1111111111', 'encrypted_password1', '1995-01-10'),
-    ('Aanya', 'Singh', 'Sharma', '2222222222', 'encrypted_password2', '1990-04-15'),
-    ('Advait', 'Joshi', 'Gupta', '3333333333', 'encrypted_password3', '1988-09-20'),
-    ('Anaya', 'Verma', 'Malhotra', '4444444444', 'encrypted_password4', '1992-06-25'),
-    ('Arjun', 'Shah', 'Chopra', '5555555555', 'encrypted_password5', '1998-03-30'),
-    ('Avni', 'Gupta', 'Khanna', '6666666666', 'encrypted_password6', '1990-12-05'),
-    ('Aryan', 'Trivedi', 'Sharma', '7777777777', 'encrypted_password7', '1996-02-10'),
-    ('Diya', 'Patel', 'Dave', '8888888888', 'encrypted_password8', '1985-11-15'),
-    ('Ishaan', 'Desai', 'Pandey', '9999999999', 'encrypted_password9', '1993-07-20'),
-    ('Kavya', 'Mehta', 'Thakkar', '1010101010', 'encrypted_password10', '1990-04-25'),
-    ('Mohit', 'Gandhi', 'Shah', '1212121212', 'encrypted_password11', '1988-09-30'),
-    ('Neha', 'Sharma', 'Patel', '1313131313', 'encrypted_password12', '1992-06-05'),
-    ('Pranav', 'Chauhan', 'Mehta', '1414141414', 'encrypted_password13', '1998-03-10'),
-    ('Riya', 'Shah', 'Joshi', '1515151515', 'encrypted_password14', '1990-12-15'),
-    ('Rohan', 'Patel', 'Sharma', '1616161616', 'encrypted_password15', '1996-02-20'),
-    ('Saanvi', 'Gupta', 'Verma', '1717171717', 'encrypted_password16', '1985-11-25'),
-    ('Shivansh', 'Sharma', 'Chopra', '1818181818', 'encrypted_password17', '1993-07-30'),
-    ('Tanvi', 'Mehta', 'Gupta', '1919191919', 'encrypted_password18', '1990-04-05'),
-    ('Vihaan', 'Shah', 'Jain', '2020202020', 'encrypted_password19', '1988-09-10'),
-    ('Zara', 'Kumar', 'Patel', '2121212121', 'encrypted_password20', '1992-06-15');
+    (0,'Aarav', 'Kumar', 'Patel', '1111111111', 'encrypted_password1', '1995-01-10'),
+    (0,'Aanya', 'Singh', 'Sharma', '2222222222', 'encrypted_password2', '1990-04-15'),
+    (0,'Advait', 'Joshi', 'Gupta', '3333333333', 'encrypted_password3', '1988-09-20'),
+    (0,'Anaya', 'Verma', 'Malhotra', '4444444444', 'encrypted_password4', '1992-06-25'),
+    (0,'Arjun', 'Shah', 'Chopra', '5555555555', 'encrypted_password5', '1998-03-30'),
+    (0,'Avni', 'Gupta', 'Khanna', '6666666666', 'encrypted_password6', '1990-12-05'),
+    (0,'Aryan', 'Trivedi', 'Sharma', '7777777777', 'encrypted_password7', '1996-02-10'),
+    (0,'Diya', 'Patel', 'Dave', '8888888888', 'encrypted_password8', '1985-11-15'),
+    (0,'Ishaan', 'Desai', 'Pandey', '9999999999', 'encrypted_password9', '1993-07-20'),
+    (0,'Kavya', 'Mehta', 'Thakkar', '1010101010', 'encrypted_password10', '1990-04-25'),
+    (0,'Mohit', 'Gandhi', 'Shah', '1212121212', 'encrypted_password11', '1988-09-30'),
+    (0,'Neha', 'Sharma', 'Patel', '1313131313', 'encrypted_password12', '1992-06-05'),
+    (0,'Pranav', 'Chauhan', 'Mehta', '1414141414', 'encrypted_password13', '1998-03-10'),
+    (0,'Riya', 'Shah', 'Joshi', '1515151515', 'encrypted_password14', '1990-12-15'),
+    (0,'Rohan', 'Patel', 'Sharma', '1616161616', 'encrypted_password15', '1996-02-20'),
+    (0,'Saanvi', 'Gupta', 'Verma', '1717171717', 'encrypted_password16', '1985-11-25'),
+    (0,'Shivansh', 'Sharma', 'Chopra', '1818181818', 'encrypted_password17', '1993-07-30'),
+    (0,'Tanvi', 'Mehta', 'Gupta', '1919191919', 'encrypted_password18', '1990-04-05'),
+    (0,'Vihaan', 'Shah', 'Jain', '2020202020', 'encrypted_password19', '1988-09-10'),
+    (0,'Zara', 'Kumar', 'Patel', '2121212121', 'encrypted_password20', '1992-06-15');
 
 INSERT INTO branch (bid, bname, city, state, pincode)
 VALUES
@@ -82,20 +82,20 @@ VALUES
     (9, 'AC00000000000009', 90000, 13,   '2000-09-09', '2001-09-09'),
     (10, 'AC00000000000010', 100000, 14, '2000-10-10', '2001-10-10');
 
-INSERT INTO card (card_no, acc_no, card_type, expiry_date, cvv)
+INSERT INTO card (card_no, acc_no, card_type, expiry_date, cvv, pin, isActive)
 VALUES
-    ('0000000000000001', 'AC00000000000001', 'D', '2023-01-01', '123'),
-    ('0000000000000002', 'AC00000000000002', 'D', '2023-02-02', '234'),
-    ('0000000000000003', 'AC00000000000003', 'C', '2023-03-03', '345'),
-    ('0000000000000004', 'AC00000000000004', 'C', '2023-04-04', '456'),
-    ('0000000000000005', 'AC00000000000005', 'D', '2023-05-05', '567'),
-    ('0000000000000006', 'AC00000000000006', 'D', '2023-06-06', '678'),
-    ('0000000000000007', 'AC00000000000007', 'C', '2023-07-07', '789'),
-    ('0000000000000008', 'AC00000000000008', 'C', '2023-08-08', '890'),
-    ('0000000000000009', 'AC00000000000009', 'D', '2023-09-09', '901'),
-    ('0000000000000010', 'AC00000000000010', 'D', '2023-10-10', '012'),
-    ('0000000000000011', 'AC00000000000001', 'C', '2023-11-11', '123'),
-    ('0000000000000012', 'AC00000000000002', 'D', '2023-12-12', '234'),
-    ('0000000000000013', 'AC00000000000003', 'D', '2023-01-01', '345'),
-    ('0000000000000014', 'AC00000000000004', 'C', '2023-02-02', '456'),
-    ('0000000000000015', 'AC00000000000005', 'C', '2023-03-03', '567');
+    ('0000000000000001', 'AC00000000000001', 'D', '2023-01-01', '123','0000',1),
+    ('0000000000000002', 'AC00000000000002', 'D', '2023-02-02', '234','0000',1),
+    ('0000000000000003', 'AC00000000000003', 'C', '2023-03-03', '345','0000',1),
+    ('0000000000000004', 'AC00000000000004', 'C', '2023-04-04', '456','0000',1),
+    ('0000000000000005', 'AC00000000000005', 'D', '2023-05-05', '567','0000',1),
+    ('0000000000000006', 'AC00000000000006', 'D', '2023-06-06', '678','0000',1),
+    ('0000000000000007', 'AC00000000000007', 'C', '2023-07-07', '789','0000',1),
+    ('0000000000000008', 'AC00000000000008', 'C', '2023-08-08', '890','0000',1),
+    ('0000000000000009', 'AC00000000000009', 'D', '2023-09-09', '901','0000',1),
+    ('0000000000000010', 'AC00000000000010', 'D', '2023-10-10', '012','0000',1),
+    ('0000000000000011', 'AC00000000000001', 'C', '2023-11-11', '123','0000',1),
+    ('0000000000000012', 'AC00000000000002', 'D', '2023-12-12', '234','0000',1),
+    ('0000000000000013', 'AC00000000000003', 'D', '2023-01-01', '345','0000',1),
+    ('0000000000000014', 'AC00000000000004', 'C', '2023-02-02', '456','0000',1),
+    ('0000000000000015', 'AC00000000000005', 'C', '2023-03-03', '567','0000',1);
