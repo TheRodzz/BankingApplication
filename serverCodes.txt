@@ -1,0 +1,5 @@
+200 -> OK
+1000 -> account with given phone_no does not exist
+1001 -> incorrect password
+
+successful login response format: 1000 isAdmin fname mname ltname phone_no encrypted_password dob

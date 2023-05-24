@@ -1,12 +1,13 @@
 import mysql.connector
 
+    
 # Establish a database connection
 def connect_to_database():
     conn = mysql.connector.connect(
         host='localhost',
-        user='your_username',
-        password='your_password',
-        database='your_database'
+        user='root',
+        password='7349',
+        database='bank'
     )
     return conn
 

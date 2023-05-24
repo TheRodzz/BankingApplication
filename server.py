@@ -2,7 +2,8 @@ import socket
 import threading
 import signal
 import sys
-
+import DBConnection
+import datetime
 class Server:
     def __init__(self, server_ip, port):
         self.server_ip = server_ip
@@ -12,13 +13,34 @@ class Server:
 
     def handle_client(self, client_socket, client_address):
         try:
+            db=DBConnection.connect_to_database()
             # Receive data from the client
-            client_message = client_socket.recv(2000).decode()
+            client_message = client_socket.recv(5000).decode()
             print("Received message from client:", client_message)
+            msg=client_message.split()
+            # print("size =")
+            # print(len(msg))
+            if msg[0] == "1":
+                sql = "SELECT * FROM customer WHERE phone_no = " + msg[1]
+                rows = DBConnection.execute_select_query(db,sql)
+                trimmed_pass=rows[0][4].rstrip(b'\x00')
+                if rows is None:
+                    response = "1000"
+                elif trimmed_pass.decode() != msg[2]:
+                    response="1001"
+                else:
+                    response = "200 "
+                    if rows[0][6]:
+                        response += "1 "
+                    else:
+                        response += "0 "
+                    response += rows[0][0] + " " + rows[0][1] + " " + rows[0][2] + " " + rows[0][3] + " " + (rows[0][4].rstrip(b'\x00')).decode() + " " + rows[0][5].strftime("%Y-%m-%d")
 
-            # Process the client request
-            response = "Server response"
-            client_socket.send(response.encode())
+                    
+                    
+
+
+            client_socket.sendall(response.encode())
 
         except Exception as e:
             print("Error occurred during client request:", str(e))
