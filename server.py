@@ -19,7 +19,7 @@ class Server:
             print("Received message from client:", client_message)
             msg=client_message.split()
             # print("size =")
-            # print(len(msg))
+            # print(len(msg)) 
             if msg[0] == "1":
                 sql = "SELECT * FROM customer WHERE phone_no = " + msg[1]
                 rows = DBConnection.execute_select_query(db,sql)
