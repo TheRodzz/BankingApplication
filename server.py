@@ -3,11 +3,10 @@ import threading
 import signal
 import sys
 import DBConnection
-import datetime
-import mysql.connector
-
+import random
 
 class Server:
+    
     def __init__(self, server_ip, port):
         self.server_ip = server_ip
         self.port = port
@@ -100,45 +99,153 @@ class Server:
                     response = "1004"
 
             # handle branches request
-            elif msg[0]=="5":
+            elif msg[0] == "5":
                 try:
-                    sql="SELECT bname from branch"
-                    rows=DBConnection.execute_select_query(sql,db)
-                    response+="200"
+                    sql = "SELECT bid,bname FROM branch"
+                    rows = DBConnection.execute_select_query(db, sql)
+                    response = "200,"
+
+                    csv_data = []
                     for row in rows:
-                        response+=row[0]+" "
+                        csv_data.append('{}. {}'.format(row[0],row[1]))
+
+                    csv_string = ','.join(csv_data)
+                    response += csv_string
+
                 except Exception as e:
-                    print("Error while accessing database:", str(e))
+                    print("Error while accessing the database:", str(e))
                     response = "1004"
+
                     
             # handle create account request
             elif msg[0]=="6":
                 try:
                     sql="SELECT COUNT(acc_no) FROM account"
-                    rows=DBConnection.execute_select_query(sql,db)      
-                    count=str(row[0][0])
+                    rows=DBConnection.execute_select_query(db,sql)      
+                    count=str(rows[0][0]+1)
                     accNo="AC"+count.zfill(14)
-                    sql="SELECT bid WHERE bname = {}".format(msg[1])
-                    rows=DBConnection.execute_select_query(sql,db)
-                    bid=row[0][0]
                     accType=None
                     if msg[3]=="1":
                         accType="S"
                     elif msg[3]=="2":
                         accType="C"
-                    sql="INSERT INTO account VALUES({}, {}, {}, {}, {}, {} )".format(accNo,bid,msg[2],str(0),str(1),accType)
+                    sql="INSERT INTO account VALUES('{}', {}, {}, {}, {}, '{}' )".format(accNo,str(msg[1]),msg[2],str(0),str(1),accType)
                     DBConnection.execute_query(db,sql)
+                    db.commit()
                     response="200 {}".format(accNo)
                 except Exception as e:
                     print("Error while accessing database:", str(e))
                     db.rollback()
                     response = "1004"
-                
+            
+            # handle check balance request
+            elif msg[0]=="7":
+                try:
+                    sql="SELECT balance FROM account WHERE acc_no ='{}'".format(msg[1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    response="200 {}".format(str(rows[0][0]))
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
                     
+            # handle get loan request
+            elif msg[0]=="8":
                     
-        except mysql.connector.Error as e:
-            print("MySQL Error occurred:", str(e))
-            response = "5001"  # Handle MySQL database errors
+                try: 
+                    interest_rate = 5
+                    sql="INSERT INTO loan (lid, acc_no, amount, interest_rate, start_date, end_date) SELECT COALESCE(MAX(lid), 0) + 1, '{}', {}, {}, NOW(), DATE(DATE_ADD(NOW(), INTERVAL 1 YEAR)) FROM loan".format(msg[1],msg[2],interest_rate)
+                    DBConnection.execute_query(db,sql)
+                    db.commit()
+                    response="200 {}".format(interest_rate)
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+            
+            # handle get new card request
+            elif msg[0]=="9":
+                try:
+                    sql="SELECT COUNT(card_no) FROM card"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    card_no=str(rows[0][0]+1).zfill(16)
+                    pin="0000" # default pin
+                    cvv=random.randint(100, 999)
+                    sql="INSERT INTO card VALUES ({},'{}','{}',DATE(DATE_ADD(NOW(), INTERVAL 1 YEAR)),{},{})".format(card_no,msg[1],msg[2],pin,cvv)
+                    db.commit()
+                    response="200 {} {} {}".format(card_no,pin,cvv)
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+            
+            # handle list all accounts request
+            elif msg[0]=="10":
+                try:
+                    sql = "SELECT acc_no, CONCAT(fname, ' ', mname, ' ', ltname) AS full_name FROM customer c,account a WHERE c.phone_no=a.phone_no ORDER BY acc_no"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    response+="200,"
+                    csv_data = []
+                    for row in rows:
+                        csv_data.append('{}. {}'.format(row[0],row[1]))
+
+                    csv_string = ','.join(csv_data)
+                    response += csv_string
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+                    
+            # handle send money from one account to other request
+            elif msg[0]=="11":
+                try:
+                    
+                    sql="SELECT balance FROM account WHERE acc_no = '{}'".format(msg[1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    if(rows[0][0]<int(msg[3])):
+                        response="1003"
+                    else:
+                        sql="UPDATE account SET balance = balance - {} WHERE acc_no = '{}'".format(msg[3],msg[1])
+                        DBConnection.execute_query(db,sql)
+                        sql="INSERT INTO transaction (tid, acc_no, type, amount, time) SELECT COALESCE(MAX(tid), 0) + 1, '{}', 'D', {}, CURRENT_TIMESTAMP FROM transaction".format(msg[1],msg[3])
+                        DBConnection.execute_query(db,sql)
+                        sql="UPDATE account SET balance = balance + {} WHERE acc_no = '{}'".format(msg[3],msg[2])
+                        DBConnection.execute_query(db,sql)
+                        sql="INSERT INTO transaction (tid, acc_no, type, amount, time) SELECT COALESCE(MAX(tid), 0) + 1, '{}', 'C', {}, CURRENT_TIMESTAMP FROM transaction".format(msg[2],msg[3])
+                        DBConnection.execute_query(db,sql)
+                        db.commit()
+                        response="200"
+
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+                    
+            # handle get branch for given account no request
+            elif msg[0]=="12":
+                try:
+                    sql="SELECT bname,city,state,pincode FROM branch b,account a WHERE a.acc_no = '{}' AND a.bid=b.bid".format(msg[1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    row=rows[0]
+                    response="200,{},{},{},{}".format(row[0],row[1],row[2],row[3])
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+            
+            # handle transaction history request
+            elif msg[0]=="13":
+                try:
+                    dur=["WEEK","MONTH","YEAR"]
+                    sql = "SELECT type,amount,time FROM transaction WHERE acc_no = '{}' AND time BETWEEN DATE_SUB(NOW(), INTERVAL 1 {}) AND NOW() ORDER BY time".format(msg[1],dur[int(msg[2])-1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    response+="200,"
+                    csv_data = []
+                    for row in rows:
+                        csv_data.append('type: {} | amount: {} | time: {}'.format(row[0],row[1],row[2]))
+
+                    csv_string = ','.join(csv_data)
+                    response += csv_string
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+                    
 
         except Exception as e:
             print("Error occurred during client request:", str(e))

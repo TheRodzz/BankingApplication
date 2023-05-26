@@ -13,4 +13,24 @@ format -> 4 acc_no amount
 5 -> get branches
 
 6 -> create account request
-format -> 6 branchName userPhoneNo accType(savings/current)
+format -> 6 branchID userPhoneNo accType(savings/current)
+
+7 -> Check balance
+format -> 7 acc_no
+
+8 -> get loan
+format -> 8 acc_no amount
+
+9 -> get new card
+format -> 9 acc_no card_type
+
+10 -> get list of all accounts and account holder name
+
+11 -> send money from one account to other
+format -> 11 sender_account_no receiver_account_no amount
+
+12 -> get branch address for a given account
+format -> 12 acc_no
+
+13 -> get transaction history
+format -> 13 acc_no duration

@@ -7,4 +7,12 @@
 
 successful login response format: 200 isAdmin fname mname ltname phone_no encrypted_password dob
 
-response to get request all accounts linked to a phone_no -> 200 acc_no1 acc_no2 ...
+response to successful get request all accounts linked to a phone_no -> 200 acc_no1 acc_no2 ...
+
+response to successful loan request -> 200 interest_rate 
+
+resonse to successful new card request -> card_no pin cvv
+
+response to successful get all accounts request -> 200 acc_no1 acc_holder1_fullname acc_no2 acc_holder2_fullname...
+
+response to successful get branch address -> 200 bname city state pincode

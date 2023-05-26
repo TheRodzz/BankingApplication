@@ -76,7 +76,6 @@ class Client:
     def withdraw(self, usr):
         try:
             acc = self.get_acc_nos_by_phone(usr.get_phone_no())
-            print("selected account number: " + acc)
             print("Enter the amount you want to withdraw")
             amt = input()
             if acc is not None:
@@ -103,12 +102,11 @@ class Client:
     def deposit(self, usr):
         try:
             acc = self.get_acc_nos_by_phone(usr.get_phone_no())
-            print("selected account number: " + acc)
             print("Enter the amount you want to deposit")
             amt = input()
             if acc is not None:
                 deposit_request = "4 " + acc + " " + amt
-                print("deposit request: " + deposit_request)
+                # print("deposit request: " + deposit_request)
                 self.connect_to_server()
                 deposit_response = self.send_request(deposit_request)
                 splt = deposit_response.split()
@@ -127,14 +125,13 @@ class Client:
 
     def create_account(self,usr):
         try:
+            branch=self.get_branch()
             self.connect_to_server()
-            print("Select your branch")
-            branch=self.getBranch()
             print("Enter 1 for savings account or 2 for current account")
-            accType=int(input())
+            accType=input()
             create_acc_request="6 {} {} {}".format(branch,usr.get_phone_no(),accType)
-            self.client_socket.sendall(create_acc_request)
-            create_response=self.client_socket.recv(5000)
+            self.client_socket.sendall(create_acc_request.encode())
+            create_response=self.client_socket.recv(5000).decode()
             splt=create_response.split()
             if splt[0]=="200":
                 print("Account created. Account number:")
@@ -149,6 +146,175 @@ class Client:
             print("An unexpected error occurred:", str(e))
             
             
+    def check_balance(self,usr):
+        try:
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            self.connect_to_server()
+            bal_request="7 {}".format(acc)
+            self.client_socket.sendall(bal_request.encode())
+            bal_response=self.client_socket.recv(5000).decode()
+            splt=bal_response.split()
+            if splt[0]=="200":
+                print("Available balance: "+splt[1])
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch balance")
+        
+        
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+    
+    def get_loan(self,usr):
+        try:
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            self.connect_to_server()
+            print("Enter loan amount")
+            amt=input()
+            loan_request="8 {} {}".format(acc,amt)
+            self.client_socket.sendall(loan_request.encode())
+            loan_response=self.client_socket.recv(5000).decode()
+            splt=loan_response.split()
+            if splt[0]=="200":
+                print("You have taken a loan for {} at {}% interest rate for 1 year".format(amt,splt[1]))
+            elif splt[0]=="1004":
+                print("Internal database error, failed to get loan")
+            
+        
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))    
+            
+            
+            
+    def get_new_card(self,usr):
+        try:
+            
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("Enter 1 for credit card or 2 for debit card")
+            cardType=input()
+            if(cardType=="1"):
+                cardType="C"
+            else:
+                cardType="D"
+                
+            card_request="9 {} {}".format(acc,cardType)
+            self.connect_to_server()
+            self.client_socket.sendall(card_request.encode())
+            card_response=self.client_socket.recv(5000).decode()
+            splt=card_response.split()
+            
+            if(splt[0]=="200"):
+                print("New card details:")
+                print("card_no: {}".format(splt[1]))
+                print("pin: {}".format(splt[2]))
+                print("cvv: {}".format(splt[3]))
+                print("Please change the default pin ASAP")
+            elif splt[0]=="1004":
+                print("Internal database error, failed to get new card")
+            
+
+            
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))    
+            
+            
+    def send_money(self,usr):
+        try:
+            acc_send=self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("Select the account you want to send money to")
+            acc_recv=self.get_all_accounts()
+            if acc_recv==acc_send:
+                print("Sender and receiver accounts must be different")
+                return
+            print("Enter the amount you want to send")
+            amt=input()
+            self.connect_to_server()
+            request="11 {} {} {}".format(acc_send,acc_recv,amt)
+            self.client_socket.sendall(request.encode())
+            response=self.client_socket.recv(5000).decode()
+            splt=response.split()
+            if splt[0]=="200":
+                print("Money sent successfully")
+            elif splt[0]=="1003":
+                print("Insufficient balance in acc_no {}, failed to send money".format(acc_send))
+            elif splt[0]=="1004":
+                print("Internal database error, transaction failed")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))
+            
+            
+    def get_branch_address(self,usr):
+        try:
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            self.connect_to_server()
+            request="12 {}".format(acc)
+            self.client_socket.sendall(request.encode())
+            response=self.client_socket.recv(5000).decode()
+            splt=response.split(",")
+            if splt[0]=="200":
+                print("Branch name: {}".format(splt[1]))
+                print("Branch city: {}".format(splt[2]))
+                print("Branch state: {}".format(splt[3]))
+                print("Branch pincode: {}".format(splt[4]))
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch branch details")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))
+            
+    def get_history(self,usr):
+        try:
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("Enter last 1 weeks , 2 for last 1 month's and 3 for last 1 year's transactions")
+            dur=input()
+            self.connect_to_server()
+            request="13 {} {}".format(acc,dur)
+            self.client_socket.sendall(request.encode())
+            response = b""
+
+            while True:
+                # Receive a chunk of data
+                chunk = self.client_socket.recv(4096)
+
+                # Break the loop if no more data is received
+                if not chunk:
+                    break
+                
+                # Append the received chunk to the buffer
+                response += chunk
+            splt=response.decode().split(",")
+            if splt[0]=="200":
+                for row in splt[1:]:
+                    print(str(row))
+                
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch transaction history")
+
+            
+            
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
     # helper functions
     
     #funtion to display accounts linked to given phone no
@@ -180,28 +346,53 @@ class Client:
         except Exception as e:
             print("An unexpected error ocurred:", str(e))
 
-    def getBranch(self):
+    def get_branch(self):
         try:
             self.connect_to_server()
-            branch_request="5"
+            branch_request = "5"
             self.client_socket.sendall(branch_request.encode())
-            branch_response=self.client_socket.recv(5000).decode()
-            splt=branch_response.split()
-            branch = None
-            if splt[0]=="200":
+            branch_response = self.client_socket.recv(5000).decode()
+            splt = branch_response.split(",")
+            if splt[0] == "200":
                 print("Select your branch")
-                for i in range(1,len(splt)):
-                    print(str(i)+" "+splt[i])
-                branch=int(input())
-                
-            return splt[branch]
+                for branch_name in splt[1:]:
+                    print(branch_name)
+                branch = int(input())
+                return branch
+            else:
+                return None
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+
+
+    def get_all_accounts(self):
+        try:
+            self.connect_to_server()
+            request="10"
+            self.client_socket.sendall(request.encode())
+            response=self.client_socket.recv(5000).decode()
+            splt=response.split(",")
+            i=1
+            if splt[0]=="200":
+                for row in splt[1:]:
+                    print(str(i)+". "+row)
+                    i+=1
+                ind=int(input())
+                lst = splt[ind].split(".")
+                return lst[0]
+            elif splt[0]=="1004":
+                print("Internal server error,failed to fetch list of accounts")
+            
         except ConnectionError:
             print("Connection error. Make sure the server is running.")
         except TimeoutError:
             print("Connection timeout. Make sure the server is running.")
         except Exception as e:
             print("An unexpected error ocurred:", str(e))
-
             
             
     
@@ -233,16 +424,16 @@ def main():
                 while(1):
                     print("----------------------------------------")
                     print("Select your choice:")
-                    print("0. Logout")
-                    print("1. Create new account")
-                    print("2. Withdraw")
-                    print("3. Deposit")
-                    print("4. Get a loan")
-                    print("5. Get a new card")
-                    print("6. Send money to another account")
-                    print("7. Check account balance")
-                    print("8. Get your branch address")
-                    print("9. Get transaction history")
+                    print(" 0. Logout")
+                    print(" 1. Create new account")
+                    print(" 2. Withdraw")
+                    print(" 3. Deposit")
+                    print(" 4. Check account balance")
+                    print(" 5. Get a loan")
+                    print(" 6. Get a new card")
+                    print(" 7. Send money to another account")
+                    print(" 8. Get your branch address")
+                    print(" 9. Get transaction history")
                     print("10. Update card pin")
                     print("11. Update profile")
                     choice = int(input())
@@ -256,17 +447,17 @@ def main():
                     elif(choice==3):
                         client.deposit(usr)
                     elif(choice==4):
-                        pass
+                        client.check_balance(usr)
                     elif(choice==5):
-                        pass
+                        client.get_loan(usr)
                     elif(choice==6):
-                        pass
+                        client.get_new_card(usr)
                     elif(choice==7):
-                        pass
+                        client.send_money(usr)
                     elif(choice==8):
-                        pass
+                        client.get_branch_address(usr)
                     elif(choice==9):
-                        pass
+                        client.get_history(usr)
                     elif(choice==10):
                         pass
                     
