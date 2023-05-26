@@ -11,7 +11,7 @@ CREATE TABLE customer(
 CREATE TABLE branch
    (
     bid INT PRIMARY KEY,
-    bname VARCHAR(50),
+    bname VARCHAR(50) UNIQUE,
     city VARCHAR(50),
     state VARCHAR(50),
     pincode CHAR(6)
