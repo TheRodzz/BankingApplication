@@ -1,11 +1,13 @@
 import socket
-from User import *
+from User import User
+
 
 class Client:
     def __init__(self, server_ip, port):
         self.server_ip = server_ip
         self.port = port
         self.client_socket = None
+        self.connect_to_server()
 
     def connect_to_server(self):
         try:
@@ -29,62 +31,186 @@ class Client:
             # Send request to the server
             self.client_socket.send(request.encode())
 
-            # Receive and print the server response
+            # Receive and return the server response
             server_response = self.client_socket.recv(2000).decode()
-            print("Server response:", server_response)
+            return server_response
 
         except Exception as e:
             print("An error occurred during request/response:", str(e))
 
-
     def login(self):
-        print("Enter phone_no")
-        phn = input()
-        print("Enter password")
-        pwd = input()
-        msg="1 " + phn + " " + pwd
-        self.client_socket.send(msg.encode())
-        server_response = self.client_socket.recv(5000).decode()
-        splt=server_response.split()
-        if(splt[0]=="200"):
-            usr=User(0,0,0,0,0,0,0)
-            isAdmin=False
-            if(splt[1]=='1'):
-                isAdmin=True
-                print("Admin login successful")
-                usr=Admin(0,0,0,0,0,0)
-            else:
-                print("Customer login successful")
-                usr=Customer(0,0,0,0,0,0)
-            if(isAdmin):
-                usr.set_is_admin(True)
-            else:
-                usr.set_is_admin(False)
-            
-            usr.set_fname(splt[2])
-            usr.set_mname(splt[3])
-            usr.set_ltname(splt[4])
-            usr.set_phone_no(splt[5])
-            usr.set_encrypted_pass(splt[6])
-            usr.set_dob(splt[7])
-            
-            return usr
-            
-        elif(splt[0]=="1000"):
-            print("Phone number you provided is not registered to any account. Create new account instead")
-            return None
-        
-        elif(splt[0]=="1001"):
-            print("Password incorrect. Try again")
-            
-        
+        rt = False
+        try:
+            print("Enter phone_no")
+            phn = input()
+            print("Enter password")
+            pwd = input()
+            msg = "1 " + phn + " " + pwd
+            self.connect_to_server()
+            self.client_socket.sendall(msg.encode())
+            server_response = self.client_socket.recv(5000).decode()
 
+            splt = server_response.split()
 
+            if splt[0] == "200":
+                usr = User(splt[2], splt[3], splt[4], splt[5], splt[6], splt[7], splt[1] == '1')
+                rt = True
+            elif splt[0] == "1000":
+                print("Phone number you provided is not registered to any account. Create a new account instead")
+
+            elif splt[0] == "1001":
+                print("Password incorrect. Try again")
+
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An error occurred during login:", str(e))
+        finally:
+            if not rt:
+                return None
+            else:
+                return usr
+
+    def withdraw(self, usr):
+        try:
+            acc = self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("selected account number: " + acc)
+            print("Enter the amount you want to withdraw")
+            amt = input()
+            if acc is not None:
+                withdraw_request = "3 " + acc + " " + amt
+                print("Withdraw request: " + withdraw_request)
+                self.connect_to_server()
+                withdraw_response = self.send_request(withdraw_request)
+                splt = withdraw_response.split()
+
+                if splt[0] == "200":
+                    print(amt + " withdrawn successfully")
+                elif splt[0] == "1003":
+                    print("Insufficient balance, failed to make withdrawal")
+                elif splt[0] == "1002":
+                    print("You don't have any account in our bank")
+
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+
+    def deposit(self, usr):
+        try:
+            acc = self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("selected account number: " + acc)
+            print("Enter the amount you want to deposit")
+            amt = input()
+            if acc is not None:
+                deposit_request = "4 " + acc + " " + amt
+                print("deposit request: " + deposit_request)
+                self.connect_to_server()
+                deposit_response = self.send_request(deposit_request)
+                splt = deposit_response.split()
+
+                if splt[0] == "200":
+                    print(amt + " deposited successfully")
+                elif splt[0]=="1004":
+                    print("Internal database error, your money will be refunded")
+
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+
+    def create_account(self,usr):
+        try:
+            self.connect_to_server()
+            print("Select your branch")
+            branch=self.getBranch()
+            print("Enter 1 for savings account or 2 for current account")
+            accType=int(input())
+            create_acc_request="6 {} {} {}".format(branch,usr.get_phone_no(),accType)
+            self.client_socket.sendall(create_acc_request)
+            create_response=self.client_socket.recv(5000)
+            splt=create_response.split()
+            if splt[0]=="200":
+                print("Account created. Account number:")
+                print(splt[1])
+            elif splt[0]=="1004":
+                print("Internal database error, failed to create acccount")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+            
+            
+    # helper functions
+    
+    #funtion to display accounts linked to given phone no
+    
+    def get_acc_nos_by_phone(self,phone_no):
+        try:
+            self.connect_to_server()
+            request="2 "+phone_no
+            print(request)
+            self.client_socket.sendall(request.encode())
+            response=self.client_socket.recv(5000).decode()
+            splt=response.split()
+            acc=None
+            if splt[0]=="200":
+                print("Select your account")
+                for i in range(1,len(splt)):
+                    print(str(i)+". "+splt[i])
+                acc = splt[int(input())]
+                
+                
+            elif splt[0]=="1002":
+                print("No account linked to given number, try creating a new account")
+
+            return acc
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))
+
+    def getBranch(self):
+        try:
+            self.connect_to_server()
+            branch_request="5"
+            self.client_socket.sendall(branch_request.encode())
+            branch_response=self.client_socket.recv(5000).decode()
+            splt=branch_response.split()
+            branch = None
+            if splt[0]=="200":
+                print("Select your branch")
+                for i in range(1,len(splt)):
+                    print(str(i)+" "+splt[i])
+                branch=int(input())
+                
+            return splt[branch]
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))
+
+            
+            
+    
     def close_connection(self):
         if self.client_socket:
             # Close the client socket
             self.client_socket.close()
             print("Connection closed")
+            
 
 def main():
     SERVER_IP = '127.0.0.1'
@@ -94,20 +220,90 @@ def main():
     client = Client(SERVER_IP, PORT)
 
     # Connect to the server
-    client.connect_to_server()
+    # client.connect_to_server()
 
-    try:
-        # Send a request to the server
-        # request = "Client request"
-        # client.send_request(request)
+
+    while(1):
+        # client.connect_to_server()
         usr=client.login()
-        
-        usr.run()
-    
-    except KeyboardInterrupt:
-        # Close the connection on Ctrl+C
-        client.close_connection()
-        print("Connection closed due to KeyboardInterrupt")
+        if usr is None:
+            print("Error logging in")
+        else:
+            if not usr.is_admin():
+                while(1):
+                    print("----------------------------------------")
+                    print("Select your choice:")
+                    print("0. Logout")
+                    print("1. Create new account")
+                    print("2. Withdraw")
+                    print("3. Deposit")
+                    print("4. Get a loan")
+                    print("5. Get a new card")
+                    print("6. Send money to another account")
+                    print("7. Check account balance")
+                    print("8. Get your branch address")
+                    print("9. Get transaction history")
+                    print("10. Update card pin")
+                    print("11. Update profile")
+                    choice = int(input())
+                    if(choice==0):
+                        break
+                    
+                    elif(choice==1):
+                        client.create_account(usr)
+                    elif(choice==2):
+                        client.withdraw(usr)   
+                    elif(choice==3):
+                        client.deposit(usr)
+                    elif(choice==4):
+                        pass
+                    elif(choice==5):
+                        pass
+                    elif(choice==6):
+                        pass
+                    elif(choice==7):
+                        pass
+                    elif(choice==8):
+                        pass
+                    elif(choice==9):
+                        pass
+                    elif(choice==10):
+                        pass
+                    
+                    elif(choice==11):
+                        pass
+            else:
+                while(1):
+                    print("----------------------------------------")
+                    print("Select your choice:")
+                    print("0. Logout")
+                    print("1. Add new branch")
+                    print("2. Update existing branch details")
+                    print("3. View transactions")
+                    print("4. Deactivate account")
+                    print("5. Block card")
+                    print("6. View loans")
+                    print("7. View analytics")
+                    choice = int(input())
+                    if(choice==0):
+                        break
+                    
+                    elif(choice==1):
+                        pass
+                    elif(choice==2):
+                        pass
+                    elif(choice==3):
+                        pass
+                    elif(choice==4):
+                        pass
+                    elif(choice==5):
+                        pass
+                    elif(choice==6):
+                        pass
+                    elif(choice==7):
+                        pass
 
+                
+    
 if __name__ == "__main__":
     main()

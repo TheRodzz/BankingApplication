@@ -1,3 +1,16 @@
 1 -> login request
-
 login request format -> 1 phone_no encrypted_password
+
+2 -> get acc_nos linked to a phone_no
+request format -> 2 phone_no
+
+3 -> withdraw request
+format -> 3 acc_no amount
+
+4 -> deposit request
+format -> 4 acc_no amount
+
+5 -> get branches
+
+6 -> create account request
+format -> 6 branchName userPhoneNo accType(savings/current)

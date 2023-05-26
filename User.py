@@ -51,26 +51,3 @@ class User:
 
     def set_is_admin(self, isAdmin):
         self._isAdmin = isAdmin
-
-
-class Customer(User):
-    def __init__(self, fname, mname, ltname, phone_no, encrypted_pass, dob):
-        super().__init__(fname, mname, ltname, phone_no, encrypted_pass, dob, False)
-
-    def run(self):
-        # implement user functions
-        print("inside customer run")
-        while(1):
-            continue
-
-
-class Admin(User):
-    def __init__(self, fname, mname, ltname, phone_no, encrypted_pass, dob):
-        super().__init__(fname, mname, ltname, phone_no, encrypted_pass, dob, True)
-
-    def run(self):
-        # implement admin functions
-        print("inside admin run")
-        while(1):
-            continue
-        
