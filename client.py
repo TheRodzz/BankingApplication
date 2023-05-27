@@ -28,12 +28,20 @@ class Client:
 
     def send_request(self, request):
         try:
-            # Send request to the server
-            self.client_socket.send(request.encode())
+            self.connect_to_server()
+            self.client_socket.sendall(request.encode())
+            response=b""
+            while True:
+                # Receive a chunk of data
+                chunk = self.client_socket.recv(4096)
 
-            # Receive and return the server response
-            server_response = self.client_socket.recv(2000).decode()
-            return server_response
+                # Break the loop if no more data is received
+                if not chunk:
+                    break
+                
+                # Append the received chunk to the buffer
+                response += chunk
+            return response.decode()
 
         except Exception as e:
             print("An error occurred during request/response:", str(e))
@@ -45,13 +53,12 @@ class Client:
             phn = input()
             print("Enter password")
             pwd = input()
-            msg = "1 " + phn + " " + pwd
-            self.connect_to_server()
-            self.client_socket.sendall(msg.encode())
-            server_response = self.client_socket.recv(5000).decode()
-
+            request = "1 {} {}".format(phn,pwd)
+            # self.connect_to_server()
+            # self.client_socket.sendall(msg.encode())
+            server_response = self.send_request(request)
             splt = server_response.split()
-
+            
             if splt[0] == "200":
                 usr = User(splt[2], splt[3], splt[4], splt[5], splt[6], splt[7], splt[1] == '1')
                 rt = True
@@ -79,9 +86,8 @@ class Client:
             print("Enter the amount you want to withdraw")
             amt = input()
             if acc is not None:
-                withdraw_request = "3 " + acc + " " + amt
+                withdraw_request = "3 {} {}".format(acc,amt)
                 print("Withdraw request: " + withdraw_request)
-                self.connect_to_server()
                 withdraw_response = self.send_request(withdraw_request)
                 splt = withdraw_response.split()
 
@@ -105,9 +111,8 @@ class Client:
             print("Enter the amount you want to deposit")
             amt = input()
             if acc is not None:
-                deposit_request = "4 " + acc + " " + amt
+                deposit_request = "4 {} {}".format(acc,amt)
                 # print("deposit request: " + deposit_request)
-                self.connect_to_server()
                 deposit_response = self.send_request(deposit_request)
                 splt = deposit_response.split()
 
@@ -130,8 +135,7 @@ class Client:
             print("Enter 1 for savings account or 2 for current account")
             accType=input()
             create_acc_request="6 {} {} {}".format(branch,usr.get_phone_no(),accType)
-            self.client_socket.sendall(create_acc_request.encode())
-            create_response=self.client_socket.recv(5000).decode()
+            create_response=self.send_request(create_acc_request)
             splt=create_response.split()
             if splt[0]=="200":
                 print("Account created. Account number:")
@@ -174,8 +178,7 @@ class Client:
             print("Enter loan amount")
             amt=input()
             loan_request="8 {} {}".format(acc,amt)
-            self.client_socket.sendall(loan_request.encode())
-            loan_response=self.client_socket.recv(5000).decode()
+            loan_response=self.send_request(loan_request)
             splt=loan_response.split()
             if splt[0]=="200":
                 print("You have taken a loan for {} at {}% interest rate for 1 year".format(amt,splt[1]))
@@ -204,9 +207,7 @@ class Client:
                 cardType="D"
                 
             card_request="9 {} {}".format(acc,cardType)
-            self.connect_to_server()
-            self.client_socket.sendall(card_request.encode())
-            card_response=self.client_socket.recv(5000).decode()
+            card_response=self.send_request(card_request)
             splt=card_response.split()
             
             if(splt[0]=="200"):
@@ -238,10 +239,8 @@ class Client:
                 return
             print("Enter the amount you want to send")
             amt=input()
-            self.connect_to_server()
             request="11 {} {} {}".format(acc_send,acc_recv,amt)
-            self.client_socket.sendall(request.encode())
-            response=self.client_socket.recv(5000).decode()
+            response=self.send_request(request)
             splt=response.split()
             if splt[0]=="200":
                 print("Money sent successfully")
@@ -260,10 +259,8 @@ class Client:
     def get_branch_address(self,usr):
         try:
             acc=self.get_acc_nos_by_phone(usr.get_phone_no())
-            self.connect_to_server()
             request="12 {}".format(acc)
-            self.client_socket.sendall(request.encode())
-            response=self.client_socket.recv(5000).decode()
+            response=self.send_request(request)
             splt=response.split(",")
             if splt[0]=="200":
                 print("Branch name: {}".format(splt[1]))
@@ -284,22 +281,10 @@ class Client:
             acc=self.get_acc_nos_by_phone(usr.get_phone_no())
             print("Enter last 1 weeks , 2 for last 1 month's and 3 for last 1 year's transactions")
             dur=input()
-            self.connect_to_server()
             request="13 {} {}".format(acc,dur)
-            self.client_socket.sendall(request.encode())
-            response = b""
+            response = self.send_request(request)
 
-            while True:
-                # Receive a chunk of data
-                chunk = self.client_socket.recv(4096)
-
-                # Break the loop if no more data is received
-                if not chunk:
-                    break
-                
-                # Append the received chunk to the buffer
-                response += chunk
-            splt=response.decode().split(",")
+            splt=response.split(",")
             if splt[0]=="200":
                 for row in splt[1:]:
                     print(str(row))
@@ -321,11 +306,9 @@ class Client:
     
     def get_acc_nos_by_phone(self,phone_no):
         try:
-            self.connect_to_server()
             request="2 "+phone_no
             print(request)
-            self.client_socket.sendall(request.encode())
-            response=self.client_socket.recv(5000).decode()
+            response=self.send_request(request)
             splt=response.split()
             acc=None
             if splt[0]=="200":
@@ -348,10 +331,8 @@ class Client:
 
     def get_branch(self):
         try:
-            self.connect_to_server()
             branch_request = "5"
-            self.client_socket.sendall(branch_request.encode())
-            branch_response = self.client_socket.recv(5000).decode()
+            branch_response = self.send_request(branch_request)
             splt = branch_response.split(",")
             if splt[0] == "200":
                 print("Select your branch")
@@ -371,10 +352,9 @@ class Client:
 
     def get_all_accounts(self):
         try:
-            self.connect_to_server()
             request="10"
-            self.client_socket.sendall(request.encode())
-            response=self.client_socket.recv(5000).decode()
+  
+            response=self.send_request(request)
             splt=response.split(",")
             i=1
             if splt[0]=="200":
@@ -394,7 +374,27 @@ class Client:
         except Exception as e:
             print("An unexpected error ocurred:", str(e))
             
-            
+    # method to take pin input while updating card
+    def get_pin(self):
+        while True:
+            password1 = input("Enter your password (4 digits): ")
+            password2 = input("Re-enter your password: ")
+
+            if password1 == password2 and len(password1) == 4 and password1.isdigit():
+                print("Password set successfully!")
+                return password1
+            else:
+                print("Passwords do not match or are not 4-digit numerical strings. Please try again.")
+    
+    def get_cards_by_acc(self,acc):
+        try:
+            request = ""
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e))
     
     def close_connection(self):
         if self.client_socket:
