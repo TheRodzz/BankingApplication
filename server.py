@@ -246,7 +246,44 @@ class Server:
                     print("Error while accessing database:", str(e))
                     response = "1004"
                     
+            elif msg[0]=="14":
+                try:
+                    sql="SELECT card_no FROM card WHERE acc_no = '{}'".format(msg[1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    if len(rows)==0:
+                        response = "1005"
+                    else:
+                        response="200 "
 
+                        for row in rows:
+                            response+="{} ".format(row[0])
+
+                   
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004" 
+
+            elif msg[0]=="15":
+                try:
+                    sql = "UPDATE card SET pin = {} WHERE card_no = '{}'".format(msg[2],msg[1])
+                    DBConnection.execute_query(db,sql)
+                    db.commit()
+                    response="200"
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004" 
+                    
+            elif msg[0]=="16":
+                try:
+                    sql="INSERT INTO  customer VALUES ({},{},{},{},{},{},{})".format(msg[1],msg[2],msg[3],msg[4],msg[5],msg[6],msg[7])
+                    DBConnection.execute_query(db,sql)
+                    db.commit()
+                    response="200"
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004" 
         except Exception as e:
             print("Error occurred during client request:", str(e))
             # response = "500"  # Handle any other unexpected errors

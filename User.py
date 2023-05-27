@@ -51,3 +51,31 @@ class User:
 
     def set_is_admin(self, isAdmin):
         self._isAdmin = isAdmin
+        
+    def update_profile(self):
+        print("Enter new profile information (leave blank to keep existing values):")
+        fname = input("First name: ")
+        if fname:
+            self._fname = fname
+
+        mname = input("Middle name: ")
+        if mname:
+            self._mname = mname
+
+        ltname = input("Last name: ")
+        if ltname:
+            self._ltname = ltname
+
+        phone_no = input("Phone number: ")
+        if phone_no:
+            self._phone_no = phone_no
+
+        
+        encrypted_pass = input("Encrypted password: ")
+        if encrypted_pass:
+            self._encrypted_pass = encrypted_pass
+
+        dob = input("Date of birth (YYYY-MM-DD): ")
+        if dob:
+            self._dob = dob
+

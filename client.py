@@ -300,10 +300,49 @@ class Client:
             print("Connection timeout. Make sure the server is running.")
         except Exception as e:
             print("An unexpected error occurred:", str(e))
+    
+    def update_pin(self,usr):
+        try:
+            acc=self.get_acc_nos_by_phone()
+            card=self.get_cards_by_acc(acc)
+            if card is not None:
+                pin=self.get_pin()
+                request="15 {} {}".format(card,pin)
+                response=self.send_request(request)
+                if response=="200":
+                    print("Pin updated successfully")
+                elif response=="1004":
+                    print("Internal database error, failed to update pin")
+        except ConnectionError:  
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+    
+    def update_profile(self,usr):
+        try:
+            newusr=User()
+            newusr=usr
+            newusr.update_profile()
+            request="16 {} {} {} {} {} {} {}".format(usr.get_fname(),usr.get_mname(),usr.get_ltname(),usr.get_phone_no(),usr.get_encrypted_pass(),usr.get_dob(),usr.is_admin())
+            response=self.send_request(request)
+            if response=="200":
+                print("Profile updated successfully")
+            elif response=="1004":
+                print("Internal database error, failed to update profile")
+        except ConnectionError:  
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
+            
+            
+    
     # helper functions
     
     #funtion to display accounts linked to given phone no
-    
     def get_acc_nos_by_phone(self,phone_no):
         try:
             request="2 "+phone_no
@@ -329,6 +368,7 @@ class Client:
         except Exception as e:
             print("An unexpected error ocurred:", str(e))
 
+    # function to display all branches
     def get_branch(self):
         try:
             branch_request = "5"
@@ -386,9 +426,24 @@ class Client:
             else:
                 print("Passwords do not match or are not 4-digit numerical strings. Please try again.")
     
+    
     def get_cards_by_acc(self,acc):
         try:
-            request = ""
+            request = "14"
+            response=self.send_request(request)
+            splt=response.split()
+            if(splt[0]=="200"):
+                print("Select your card")
+                for i in range (1,len(splt)):
+                    print(str(i)+". "+splt[i])
+                card=int(input())
+                return splt[card]
+            elif splt[0]=="1005":
+                print("You don't have any card. Try getting a new card")
+                
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch card details")
+            return None
         except ConnectionError:
             print("Connection error. Make sure the server is running.")
         except TimeoutError:
@@ -459,10 +514,9 @@ def main():
                     elif(choice==9):
                         client.get_history(usr)
                     elif(choice==10):
-                        pass
-                    
+                        client.update_pin(usr)
                     elif(choice==11):
-                        pass
+                        client.update_profile(usr)
             else:
                 while(1):
                     print("----------------------------------------")

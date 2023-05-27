@@ -4,6 +4,7 @@
 1002 -> no account linked to phone_no requested
 1003 -> insufficient balance
 1004 -> database error
+1005 -> no card linked to given account
 
 successful login response format: 200 isAdmin fname mname ltname phone_no encrypted_password dob
 
@@ -15,4 +16,6 @@ resonse to successful new card request -> card_no pin cvv
 
 response to successful get all accounts request -> 200 acc_no1 acc_holder1_fullname acc_no2 acc_holder2_fullname...
 
-response to successful get branch address -> 200 bname city state pincode
+response to successful get branch address -> 200, bname, city, state, pincode
+
+response to successful get transaction history request -> 200, acc_no1 transaction_type1 amount1 time1, acc_no1 transaction_type1 amount1 time1, ....

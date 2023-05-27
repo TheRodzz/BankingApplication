@@ -34,3 +34,12 @@ format -> 12 acc_no
 
 13 -> get transaction history
 format -> 13 acc_no duration
+
+14 -> get all cards linked to an account no
+format -> 14 acc_no
+
+15 -> update pin
+format -> 15 card_no new_pin
+
+16 -> update profile request
+format -> 16 fname mname ltname phone_no encrypted_pass dob
