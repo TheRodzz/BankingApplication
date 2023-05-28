@@ -42,7 +42,7 @@ format -> 14 acc_no
 format -> 15 card_no new_pin
 
 16 -> update profile request
-format -> 16 fname mname ltname phone_no encrypted_pass dob
+format -> 16 fname mname ltname encrypted_pass dob is_admin
 
 17 -> get all transaction history
 format -> 17 duration
@@ -52,3 +52,7 @@ format -> 18 branch_name branch_city branch_state branch_pincode
 
 19 -> Deactivate account
 format -> 19 acc_no
+
+20 -> view loans
+
+21 -> get analytics

@@ -3,6 +3,7 @@ from User import User
 
 
 class Client:
+    
     def __init__(self, server_ip, port):
         self.server_ip = server_ip
         self.port = port
@@ -82,6 +83,7 @@ class Client:
 
     def withdraw(self, usr):
         try:
+            
             acc = self.get_acc_nos_by_phone(usr.get_phone_no())
             print("Enter the amount you want to withdraw")
             amt = input()
@@ -300,7 +302,7 @@ class Client:
     
     def update_pin(self,usr):
         try:
-            acc=self.get_acc_nos_by_phone()
+            acc=self.get_acc_nos_by_phone(usr.get_phone_no())
             card=self.get_cards_by_acc(acc)
             if card is not None:
                 pin=self.get_pin()
@@ -319,10 +321,10 @@ class Client:
     
     def update_profile(self,usr):
         try:
-            newusr=User()
+            newusr=User(0,0,0,0,0,0,0)
             newusr=usr
             newusr.update_profile()
-            request="16 {} {} {} {} {} {} {}".format(usr.get_fname(),usr.get_mname(),usr.get_ltname(),usr.get_phone_no(),usr.get_encrypted_pass(),usr.get_dob(),usr.is_admin())
+            request="16 {} {} {} {} {} {}".format(usr.get_fname(),usr.get_mname(),usr.get_ltname(),usr.get_encrypted_pass(),usr.get_dob(),int(usr.is_admin()))
             response=self.send_request(request)
             if response=="200":
                 print("Profile updated successfully")
@@ -398,8 +400,42 @@ class Client:
         except Exception as e:
             print("An unexpected error ocurred:", str(e)) 
 
+    def view_loans(self):
+        try: 
+            request="20"
+            response=self.send_request(request)
+            splt=response.split(",")
+            if splt[0]=="200":
+                for row in splt[1:]:
+                    print(row)
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch loan details")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e)) 
 
-
+    def analytics(self):
+        try:
+            request="21"
+            response=self.send_request(request)
+            splt=response.split(",")
+            if splt[0]=="200":
+                print(splt[1])
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch analytics")
+            
+        except ConnectionError:
+            
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e)) 
+        
+    
 
     # helper functions
     
@@ -498,7 +534,7 @@ class Client:
     
     def get_cards_by_acc(self,acc):
         try:
-            request = "14"
+            request = "14 {}".format(acc)
             response=self.send_request(request)
             splt=response.split()
             if(splt[0]=="200"):
@@ -596,9 +632,8 @@ def main():
                     print("2. Update existing branch details")
                     print("3. View transactions")
                     print("4. Deactivate account")
-                    print("5. Block card")
-                    print("6. View loans")
-                    print("7. View analytics")
+                    print("5. View loans")
+                    print("6. View analytics")
                     choice = int(input())
                     if(choice==0):
                         break
@@ -612,11 +647,9 @@ def main():
                     elif(choice==4):
                         client.deactivate_account()
                     elif(choice==5):
-                        pass
+                        client.view_loans()
                     elif(choice==6):
-                        pass
-                    elif(choice==7):
-                        pass
+                        client.analytics()
 
                 
     

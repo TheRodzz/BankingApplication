@@ -48,7 +48,7 @@ class Server:
             # handle get acc_nos linked to a phone_no request
             elif msg[0] == "2":
                 try:
-                    sql = "SELECT acc_no FROM account a WHERE a.phone_no = '" + msg[1] + "'"
+                    sql = "SELECT acc_no FROM account a WHERE a.phone_no = '{}' AND isActive='1'".format(msg[1])
                     rows = DBConnection.execute_select_query(db, sql)
                     if len(rows) == 0:
                         response = "1002"
@@ -279,7 +279,7 @@ class Server:
             # handle update profile request
             elif msg[0]=="16":
                 try:
-                    sql="INSERT INTO  customer VALUES ({},{},{},{},{},{},{})".format(msg[1],msg[2],msg[3],msg[4],msg[5],msg[6],msg[7])
+                    sql="UPDATE customer set fname='{}',mname='{}',ltname='{}',encrypted_password='{}',dob='{}',isAdmin='{}'".format(msg[1],msg[2],msg[3],msg[4],msg[5],msg[6])
                     DBConnection.execute_query(db,sql)
                     db.commit()
                     response="200"
@@ -308,7 +308,9 @@ class Server:
 
             elif msg[0]=="18":
                 try:
-                    sql="INSERT INTO branch (bid, bname, city, state, pincode) VALUES ((SELECT COALESCE(MAX(bid), 0) + 1 FROM branch), '{}', '{}', '{}', '{}')".format(msg[1],msg[2],msg[3],msg[4])
+                    sql="SELECT COALESCE(MAX(bid), 0) + 1 FROM branch"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    sql="INSERT INTO branch (bid, bname, city, state, pincode) VALUES ({}, '{}', '{}', '{}', '{}')".format(rows[0][0],msg[1],msg[2],msg[3],msg[4])
                     DBConnection.execute_query(db,sql)
                     db.commit()
                     response="200"
@@ -320,7 +322,7 @@ class Server:
 
             elif msg[0]=="19":
                 try:
-                    sql="UPDATE account SET isAdmin='0' WHERE acc_no='{}'".format(msg[2])
+                    sql="UPDATE account SET isActive='0' WHERE acc_no='{}'".format(msg[1])
                     DBConnection.execute_query(db,sql)
                     db.commit()
                     response="200"
@@ -329,6 +331,39 @@ class Server:
                     print("Error while accessing database:", str(e))
                     response = "1004"
             
+            
+            elif msg[0]=="20":
+                try:
+                    sql="SELECT * FROM loan"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    response+="200,"
+                    csv_data = []
+                    for row in rows:
+                        csv_data.append('ID: {} | account_no: {} | amount: {} | Interest Rate: {} | Start Date: | End Date: '.format(row[0],row[1],row[2],row[3],row[4],row[5]))
+
+                    csv_string = ','.join(csv_data)
+                    response += csv_string
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+                    
+            # handle view analytics request       
+            elif msg[0]=="21":
+                try:
+                    sql="SELECT COUNT(acc_no) FROM account WHERE isActive = '1'"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    active_accounts=rows[0][0]
+                    sql="SELECT SUM(amount) FROM transaction WHERE type ='C'"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    total_credit=rows[0][0]
+                    sql="SELECT SUM(amount) FROM transaction WHERE type ='D'"
+                    rows=DBConnection.execute_select_query(db,sql)
+                    total_debit=rows[0][0]
+                    response="200, Number of active accounts: {} Total amount credited: {} Total amount debited: {}".format(active_accounts,total_credit,total_debit)
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
         except Exception as e:
             print("Error occurred during client request:", str(e))
             # response = "500"  # Handle any other unexpected errors
@@ -373,6 +408,13 @@ class Server:
                 self.server_socket.close()
 
 
+    def checkAccountStatus(self,acc_no):
+        status=False
+        sql="SELECT isActive FROM account WHERE acc_no ='{}'".format(acc_no)
+        db=DBConnection.connect_to_database()
+        rows=DBConnection.execute_select_query(db,sql)
+        status=bool(rows[0][0])
+        return status
 def handle_shutdown(signal, frame):
     print("Received shutdown signal...")
     sys.exit(0)

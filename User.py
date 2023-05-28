@@ -65,11 +65,6 @@ class User:
         ltname = input("Last name: ")
         if ltname:
             self._ltname = ltname
-
-        phone_no = input("Phone number: ")
-        if phone_no:
-            self._phone_no = phone_no
-
         
         encrypted_pass = input("Encrypted password: ")
         if encrypted_pass:
