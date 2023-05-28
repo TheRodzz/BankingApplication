@@ -245,7 +245,8 @@ class Server:
                 except Exception as e:
                     print("Error while accessing database:", str(e))
                     response = "1004"
-                    
+            
+            # handle get all cards linked to account request
             elif msg[0]=="14":
                 try:
                     sql="SELECT card_no FROM card WHERE acc_no = '{}'".format(msg[1])
@@ -263,6 +264,7 @@ class Server:
                     print("Error while accessing database:", str(e))
                     response = "1004" 
 
+            # handle update pin request
             elif msg[0]=="15":
                 try:
                     sql = "UPDATE card SET pin = {} WHERE card_no = '{}'".format(msg[2],msg[1])
@@ -274,6 +276,7 @@ class Server:
                     print("Error while accessing database:", str(e))
                     response = "1004" 
                     
+            # handle update profile request
             elif msg[0]=="16":
                 try:
                     sql="INSERT INTO  customer VALUES ({},{},{},{},{},{},{})".format(msg[1],msg[2],msg[3],msg[4],msg[5],msg[6],msg[7])
@@ -284,6 +287,48 @@ class Server:
                     db.rollback()
                     print("Error while accessing database:", str(e))
                     response = "1004" 
+
+            # handle admin history request
+            
+            elif msg[0]=="17":
+                try:
+                    dur=["WEEK","MONTH","YEAR"]
+                    sql = "SELECT type,amount,time FROM transaction WHERE time BETWEEN DATE_SUB(NOW(), INTERVAL 1 {}) AND NOW() ORDER BY acc_no,time".format(dur[int(msg[1])-1])
+                    rows=DBConnection.execute_select_query(db,sql)
+                    response+="200,"
+                    csv_data = []
+                    for row in rows:
+                        csv_data.append('type: {} | amount: {} | time: {}'.format(row[0],row[1],row[2]))
+
+                    csv_string = ','.join(csv_data)
+                    response += csv_string
+                except Exception as e:
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+
+            elif msg[0]=="18":
+                try:
+                    sql="INSERT INTO branch (bid, bname, city, state, pincode) VALUES ((SELECT COALESCE(MAX(bid), 0) + 1 FROM branch), '{}', '{}', '{}', '{}')".format(msg[1],msg[2],msg[3],msg[4])
+                    DBConnection.execute_query(db,sql)
+                    db.commit()
+                    response="200"
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+            
+
+            elif msg[0]=="19":
+                try:
+                    sql="UPDATE account SET isAdmin='0' WHERE acc_no='{}'".format(msg[2])
+                    DBConnection.execute_query(db,sql)
+                    db.commit()
+                    response="200"
+                except Exception as e:
+                    db.rollback()
+                    print("Error while accessing database:", str(e))
+                    response = "1004"
+            
         except Exception as e:
             print("Error occurred during client request:", str(e))
             # response = "500"  # Handle any other unexpected errors

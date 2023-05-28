@@ -43,3 +43,12 @@ format -> 15 card_no new_pin
 
 16 -> update profile request
 format -> 16 fname mname ltname phone_no encrypted_pass dob
+
+17 -> get all transaction history
+format -> 17 duration
+
+18 -> add branch
+format -> 18 branch_name branch_city branch_state branch_pincode
+
+19 -> Deactivate account
+format -> 19 acc_no

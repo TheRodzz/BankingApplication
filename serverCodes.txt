@@ -6,7 +6,7 @@
 1004 -> database error
 1005 -> no card linked to given account
 
-successful login response format: 200 isAdmin fname mname ltname phone_no encrypted_password dob
+successful login response format -> 200 isAdmin fname mname ltname phone_no encrypted_password dob
 
 response to successful get request all accounts linked to a phone_no -> 200 acc_no1 acc_no2 ...
 

@@ -291,9 +291,6 @@ class Client:
                 
             elif splt[0]=="1004":
                 print("Internal database error, failed to fetch transaction history")
-
-            
-            
         except ConnectionError:
             print("Connection error. Make sure the server is running.")
         except TimeoutError:
@@ -338,11 +335,83 @@ class Client:
         except Exception as e:
             print("An unexpected error occurred:", str(e))
             
+    def get_admin_history(self):
+        try:
+            # acc=self.get_acc_nos_by_phone(usr.get_phone_no())
+            print("Enter last 1 weeks , 2 for last 1 month's and 3 for last 1 year's transactions")
+            dur=input()
+            request="17 {}".format(dur)
+            response = self.send_request(request)
+
+            splt=response.split(",")
+            if splt[0]=="200":
+                for row in splt[1:]:
+                    print(str(row))
+                
+            elif splt[0]=="1004":
+                print("Internal database error, failed to fetch transaction history")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e)) 
             
-    
+    def add_branch(self):
+        try:
+            print("Enter branch name")
+            branch=input()
+            print("Enter branch city")
+            city=input()
+            print("Enter branch state")
+            state=input()
+            print("Enter branch pincode")
+            pincode=input()
+            
+            request="18 {} {} {} {}".format(branch,city,state,pincode)
+            response=self.send_request(request)
+            if response=="200":
+                print("New branch added successfully")
+            elif response=="1004":
+                print("Internal database error, failed to add branch")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e)) 
+
+    def deactivate_account(self):
+        try:
+            print("Select the account you want to deactivate")
+            acc=self.get_all_accounts()
+            request="19 {}".format(acc)
+            response=self.send_request(request)
+            if response=="200":
+                print("Account {} deacivated successfully".format(acc))
+            elif response=="1004":
+                print("Internal database error, failed to deactivate account")
+        except ConnectionError:
+            print("Connection error. Make sure the server is running.")
+        except TimeoutError:
+            print("Connection timeout. Make sure the server is running.")
+        except Exception as e:
+            print("An unexpected error ocurred:", str(e)) 
+
+
+
+
     # helper functions
     
-    #funtion to display accounts linked to given phone no
+    """
+    Retrieves account numbers associated with a given phone number from the server.
+
+    Args:
+        phone_no (str): The phone number for which to retrieve account numbers.
+
+    Returns:
+        str or None: The selected account number if retrieval is successful, None otherwise.
+    """
     def get_acc_nos_by_phone(self,phone_no):
         try:
             request="2 "+phone_no
@@ -477,6 +546,7 @@ def main():
         else:
             if not usr.is_admin():
                 while(1):
+                    # before doing any activity check if account is active
                     print("----------------------------------------")
                     print("Select your choice:")
                     print(" 0. Logout")
@@ -532,15 +602,15 @@ def main():
                     choice = int(input())
                     if(choice==0):
                         break
-                    
                     elif(choice==1):
-                        pass
+                        client.add_branch()
                     elif(choice==2):
                         pass
+                        # client.update_branch()
                     elif(choice==3):
-                        pass
+                        client.get_admin_history()
                     elif(choice==4):
-                        pass
+                        client.deactivate_account()
                     elif(choice==5):
                         pass
                     elif(choice==6):
