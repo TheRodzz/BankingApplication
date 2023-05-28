@@ -266,7 +266,7 @@ class Server:
 
             # handle update pin request
             elif msg[0]=="15":
-                try:
+                try: 
                     sql = "UPDATE card SET pin = {} WHERE card_no = '{}'".format(msg[2],msg[1])
                     DBConnection.execute_query(db,sql)
                     db.commit()
